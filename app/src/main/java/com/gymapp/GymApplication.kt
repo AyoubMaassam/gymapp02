@@ -19,7 +19,7 @@ class GymApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         setupCoil()
-        syncExerciseImages()
+        // syncExerciseImages() // Removed bulk sync of hardcoded URLs
     }
 
     private fun setupCoil() {

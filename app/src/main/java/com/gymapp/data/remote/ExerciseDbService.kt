@@ -19,6 +19,36 @@ data class ExerciseApiData(
 
 object ExerciseDbService {
 
+    suspend fun fetchExerciseByName(name: String): ExerciseApiData? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val encodedName = name.lowercase().replace(" ", "%20")
+                val url = URL(
+                    "${ApiConfig.BASE_URL}/exercises/name/$encodedName?limit=1&offset=0"
+                )
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.setRequestProperty("x-rapidapi-key", ApiConfig.RAPID_API_KEY)
+                connection.setRequestProperty("x-rapidapi-host", ApiConfig.RAPID_API_HOST)
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.connectTimeout = 15000
+                connection.readTimeout = 15000
+
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = connection.inputStream.bufferedReader().readText()
+                    parseExercises(response).firstOrNull()
+                } else {
+                    val error = connection.errorStream?.bufferedReader()?.readText()
+                    Log.e("GymApp", "خطأ API لبحث $name: ${connection.responseCode} — $error")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e("GymApp", "استثناء API لبحث $name: ${e.message}")
+                null
+            }
+        }
+    }
+
     suspend fun fetchAllExercises(): List<ExerciseApiData> {
         return withContext(Dispatchers.IO) {
             val allExercises = mutableListOf<ExerciseApiData>()
@@ -42,12 +72,12 @@ object ExerciseDbService {
             try {
                 val encodedPart = bodyPart.replace(" ", "%20")
                 val url = URL(
-                    "https://exercisedb.p.rapidapi.com/exercises/bodyPart/$encodedPart?limit=50&offset=0"
+                    "${ApiConfig.BASE_URL}/exercises/bodyPart/$encodedPart?limit=50&offset=0"
                 )
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.setRequestProperty("x-rapidapi-key", "e0e653cf28mshf22b9df3a93071bp19d3eejsn99c658ec804b")
-                connection.setRequestProperty("x-rapidapi-host", "exercisedb.p.rapidapi.com")
+                connection.setRequestProperty("x-rapidapi-key", ApiConfig.RAPID_API_KEY)
+                connection.setRequestProperty("x-rapidapi-host", ApiConfig.RAPID_API_HOST)
                 connection.setRequestProperty("Content-Type", "application/json")
                 connection.connectTimeout = 15000
                 connection.readTimeout = 15000

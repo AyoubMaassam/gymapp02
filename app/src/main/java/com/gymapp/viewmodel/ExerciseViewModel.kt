@@ -11,13 +11,18 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ExerciseViewModel @Inject constructor(
     private val repository: ExerciseRepository
 ) : ViewModel() {
+
+    // تتبع التمارين التي يتم جلب صورها حالياً لمنع تكرار الطلبات
+    private val fetchingExerciseIds = mutableSetOf<Int>()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -32,6 +37,20 @@ class ExerciseViewModel @Inject constructor(
         _searchQuery.flatMapLatest { query ->
             _selectedCategory.flatMapLatest { category ->
                 repository.searchAndFilter(query, category)
+            }
+        }.onEach { list ->
+            // تحفيز جلب الـ GIFs للتمارين التي لم يتم جلبها بعد
+            list.filter {
+                (it.gifUrl.isEmpty() || !it.gifUrl.contains("exercisedb")) && !fetchingExerciseIds.contains(it.id)
+            }.forEach { exercise ->
+                fetchingExerciseIds.add(exercise.id)
+                viewModelScope.launch {
+                    try {
+                        repository.ensureExerciseGif(exercise)
+                    } finally {
+                        // ملاحظة: لا نزيل الـ ID من المجموعة فوراً لضمان عدم المحاولة مرة أخرى في نفس الجلسة إذا فشل
+                    }
+                }
             }
         }.stateIn(
             scope = viewModelScope,
@@ -49,6 +68,16 @@ class ExerciseViewModel @Inject constructor(
 
     fun getExerciseById(id: Int): StateFlow<Exercise?> =
         repository.getExerciseById(id)
+            .onEach { exercise ->
+                exercise?.let {
+                    if ((it.gifUrl.isEmpty() || !it.gifUrl.contains("exercisedb")) && !fetchingExerciseIds.contains(it.id)) {
+                        fetchingExerciseIds.add(it.id)
+                        viewModelScope.launch {
+                            repository.ensureExerciseGif(it)
+                        }
+                    }
+                }
+            }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
