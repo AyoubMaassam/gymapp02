@@ -41,7 +41,7 @@ class ExerciseViewModel @Inject constructor(
         }.onEach { list ->
             // تحفيز جلب الـ GIFs للتمارين التي لم يتم جلبها بعد
             list.filter {
-                (it.gifUrl.isEmpty() || !it.gifUrl.contains("exercisedb")) && !fetchingExerciseIds.contains(it.id)
+                (it.gifUrl.isEmpty() || !it.gifUrl.contains("rapidapi-key")) && !fetchingExerciseIds.contains(it.id)
             }.forEach { exercise ->
                 fetchingExerciseIds.add(exercise.id)
                 viewModelScope.launch {
@@ -70,7 +70,7 @@ class ExerciseViewModel @Inject constructor(
         repository.getExerciseById(id)
             .onEach { exercise ->
                 exercise?.let {
-                    if ((it.gifUrl.isEmpty() || !it.gifUrl.contains("exercisedb")) && !fetchingExerciseIds.contains(it.id)) {
+                    if ((it.gifUrl.isEmpty() || !it.gifUrl.contains("rapidapi-key")) && !fetchingExerciseIds.contains(it.id)) {
                         fetchingExerciseIds.add(it.id)
                         viewModelScope.launch {
                             repository.ensureExerciseGif(it)

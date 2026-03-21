@@ -11,11 +11,9 @@ class ExerciseRepository @Inject constructor(
     private val exerciseDao: ExerciseDao
 ) {
     suspend fun ensureExerciseGif(exercise: Exercise) {
-        // إذا كان الرابط يحتوي على "exercisedb" أو ليس فارغاً ويبدو حقيقياً، قد لا نحتاج لتحديثه
-        // لكن المطلب هو استخدام ExerciseDB API بدلاً من الصور المحلية
-        // الروابط الحالية في Seeder هي picsum.photos أو روابط GitHub
-
-        if (exercise.gifUrl.contains("exercisedb.p.rapidapi.com") || exercise.gifUrl.contains("giphy.com")) {
+        // التحقق مما إذا كان الرابط هو رابط ExerciseDB الصحيح
+        // نتحقق من وجود "rapidapi-key" في الرابط لأنه جزء من الـ URL الجديد الذي بنيناه
+        if (exercise.gifUrl.contains("exercisedb.p.rapidapi.com") && exercise.gifUrl.contains("rapidapi-key")) {
             return
         }
 
@@ -24,6 +22,8 @@ class ExerciseRepository @Inject constructor(
             if (apiData != null && apiData.gifUrl.isNotEmpty()) {
                 exerciseDao.updateGifUrl(exercise.id, apiData.gifUrl)
                 Log.d("GymApp", "تم تحديث GIF للتمرين ${exercise.nameEn}: ${apiData.gifUrl}")
+            } else {
+                Log.w("GymApp", "لم يتم العثور على نتيجة لـ ${exercise.nameEn}")
             }
         } catch (e: Exception) {
             Log.e("GymApp", "فشل تحديث GIF لـ ${exercise.nameEn}: ${e.message}")

@@ -22,9 +22,17 @@ object ExerciseDbService {
     suspend fun fetchExerciseByName(name: String): ExerciseApiData? {
         return withContext(Dispatchers.IO) {
             try {
-                val encodedName = name.lowercase().replace(" ", "%20")
+                // تنظيف الاسم للحصول على نتائج أفضل
+                val cleanName = name.lowercase()
+                    .replace("barbell ", "")
+                    .replace("dumbbell ", "")
+                    .replace("flat ", "")
+                    .replace("seated ", "")
+                    .trim()
+
+                val encodedName = cleanName.replace(" ", "%20")
                 val url = URL(
-                    "${ApiConfig.BASE_URL}/exercises/name/$encodedName?limit=1&offset=0"
+                    "${ApiConfig.BASE_URL}/exercises/name/$encodedName?limit=10&offset=0"
                 )
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
@@ -36,10 +44,16 @@ object ExerciseDbService {
 
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val response = connection.inputStream.bufferedReader().readText()
-                    parseExercises(response).firstOrNull()
+                    val results = parseExercises(response)
+
+                    // محاولة مطابقة أفضل نتيجة
+                    val bestMatch = results.find { it.name.contains(name.lowercase()) }
+                        ?: results.firstOrNull()
+
+                    bestMatch
                 } else {
                     val error = connection.errorStream?.bufferedReader()?.readText()
-                    Log.e("GymApp", "خطأ API لبحث $name: ${connection.responseCode} — $error")
+                    Log.e("GymApp", "خطأ API لبحث $name ($cleanName): ${connection.responseCode} — $error")
                     null
                 }
             } catch (e: Exception) {
@@ -105,22 +119,8 @@ object ExerciseDbService {
                 val obj: JSONObject = array.getJSONObject(i)
                 val id = obj.optString("id", "")
 
-                // نطبع كل مفاتيح أول عنصر لمعرفة بنية الـ JSON
-                if (i == 0) {
-                    Log.d("GymApp", "مفاتيح JSON: ${obj.keys().asSequence().toList()}")
-                    Log.d("GymApp", "قيم أول عنصر: $obj")
-                }
-
-                // نجرب كل الأسماء الممكنة للصورة
-                val gifUrl = listOf(
-                    obj.optString("gifUrl", ""),
-                    obj.optString("gif_url", ""),
-                    obj.optString("imageUrl", ""),
-                    obj.optString("image_url", ""),
-                    obj.optString("image", ""),
-                    obj.optString("images", ""),
-                    obj.optString("thumbnail", "")
-                ).firstOrNull { it.isNotEmpty() && it.startsWith("http") } ?: ""
+                // بناء رابط الصورة باستخدام endpoint /image الجديد
+                val gifUrl = "${ApiConfig.BASE_URL}/image?exerciseId=$id&resolution=360&rapidapi-key=${ApiConfig.RAPID_API_KEY}"
 
                 result.add(
                     ExerciseApiData(
