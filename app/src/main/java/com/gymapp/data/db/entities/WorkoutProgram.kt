@@ -58,6 +58,7 @@ data class ProgramExercise(
     val exerciseId: Int,
     val sets: Int,
     val reps: String,
+    val weight: Double = 0.0,
     val restSeconds: Int,
     val order: Int
 )

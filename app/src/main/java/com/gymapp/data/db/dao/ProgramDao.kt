@@ -26,7 +26,19 @@ interface ProgramDao {
 
     @Transaction
     @Query("SELECT * FROM workout_programs WHERE id = :programId")
-    suspend fun getProgramWithDays(programId: Int): ProgramWithDays?
+    fun getProgramWithDays(programId: Int): Flow<ProgramWithDays?>
+
+    @Delete
+    suspend fun deleteProgram(program: WorkoutProgram)
+
+    @Delete
+    suspend fun deleteExercise(exercise: ProgramExercise)
+
+    @Update
+    suspend fun updateExercise(exercise: ProgramExercise)
+
+    @Update
+    suspend fun updateProgram(program: WorkoutProgram)
 }
 
 data class ProgramWithDays(

@@ -2,6 +2,7 @@ package com.gymapp.ui.screens.programs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -38,6 +39,7 @@ import com.gymapp.viewmodel.ProgramViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramsScreen(
+    onProgramClick: (Int) -> Unit = {},
     viewModel: ProgramViewModel = hiltViewModel()
 ) {
     val programs by viewModel.programs.collectAsStateWithLifecycle()
@@ -149,7 +151,7 @@ fun ProgramsScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(programs) { program ->
-                        ProgramCard(program)
+                        ProgramCard(program, onClick = { onProgramClick(program.id) })
                     }
                 }
             }
@@ -165,11 +167,12 @@ fun ProgramsScreen(
 }
 
 @Composable
-fun ProgramCard(program: WorkoutProgram) {
+fun ProgramCard(program: WorkoutProgram, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick() }
             .border(1.dp, Color(0xFF404040), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
     ) {
@@ -223,7 +226,7 @@ fun ProgramCard(program: WorkoutProgram) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
-                    onClick = { /* Detail */ },
+                    onClick = onClick,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D2D2D)),

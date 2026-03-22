@@ -69,4 +69,28 @@ class ProgramViewModel @Inject constructor(
             repository.createProgram(program, days)
         }
     }
+
+    fun getProgramWithDays(programId: Int): StateFlow<com.gymapp.data.db.dao.ProgramWithDays?> =
+        repository.getProgramWithDays(programId)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = null
+            )
+
+    fun deleteProgram(program: WorkoutProgram) {
+        viewModelScope.launch { repository.deleteProgram(program) }
+    }
+
+    fun deleteExercise(exercise: ProgramExercise) {
+        viewModelScope.launch { repository.deleteExercise(exercise) }
+    }
+
+    fun updateExercise(exercise: ProgramExercise) {
+        viewModelScope.launch { repository.updateExercise(exercise) }
+    }
+
+    fun addExerciseToDay(dayId: Int, exerciseId: Int, order: Int) {
+        viewModelScope.launch { repository.addExerciseToDay(dayId, exerciseId, order) }
+    }
 }

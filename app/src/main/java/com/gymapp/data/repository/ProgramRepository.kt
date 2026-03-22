@@ -29,5 +29,27 @@ class ProgramRepository @Inject constructor(
         }
     }
 
-    suspend fun getProgramWithDays(programId: Int) = programDao.getProgramWithDays(programId)
+    fun getProgramWithDays(programId: Int) = programDao.getProgramWithDays(programId)
+
+    suspend fun deleteProgram(program: WorkoutProgram) = programDao.deleteProgram(program)
+
+    suspend fun deleteExercise(exercise: ProgramExercise) = programDao.deleteExercise(exercise)
+
+    suspend fun updateExercise(exercise: ProgramExercise) = programDao.updateExercise(exercise)
+
+    suspend fun updateProgram(program: WorkoutProgram) = programDao.updateProgram(program)
+
+    suspend fun addExerciseToDay(dayId: Int, exerciseId: Int, order: Int) {
+        programDao.insertProgramExercise(
+            ProgramExercise(
+                dayId = dayId,
+                exerciseId = exerciseId,
+                sets = 3,
+                reps = "12",
+                weight = 0.0,
+                restSeconds = 60,
+                order = order
+            )
+        )
+    }
 }
