@@ -4,9 +4,11 @@ import android.content.Context
 import com.gymapp.data.db.AppDatabase
 import com.gymapp.data.db.dao.EquipmentDao
 import com.gymapp.data.db.dao.ExerciseDao
+import com.gymapp.data.db.dao.ProgramDao
 import com.gymapp.data.db.dao.WorkoutDao
 import com.gymapp.data.repository.EquipmentRepository
 import com.gymapp.data.repository.ExerciseRepository
+import com.gymapp.data.repository.ProgramRepository
 import com.gymapp.data.repository.WorkoutRepository
 import dagger.Module
 import dagger.Provides
@@ -35,6 +37,9 @@ object AppModule {
     fun provideWorkoutDao(db: AppDatabase): WorkoutDao = db.workoutDao()
 
     @Provides
+    fun provideProgramDao(db: AppDatabase): ProgramDao = db.programDao()
+
+    @Provides
     @Singleton
     fun provideExerciseRepository(exerciseDao: ExerciseDao): ExerciseRepository =
         ExerciseRepository(exerciseDao)
@@ -51,4 +56,9 @@ object AppModule {
     @Singleton
     fun provideWorkoutRepository(workoutDao: WorkoutDao): WorkoutRepository =
         WorkoutRepository(workoutDao)
+
+    @Provides
+    @Singleton
+    fun provideProgramRepository(programDao: ProgramDao): ProgramRepository =
+        ProgramRepository(programDao)
 }
