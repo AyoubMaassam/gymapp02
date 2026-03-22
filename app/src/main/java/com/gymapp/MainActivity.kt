@@ -24,9 +24,11 @@ class MainActivity : ComponentActivity() {
                         BottomNavBar(navController = navController)
                     }
                 ) { paddingValues ->
-                    NavGraph(
-                        navController = navController
-                    )
+                    Box(modifier = Modifier.padding(paddingValues)) {
+                        NavGraph(
+                            navController = navController
+                        )
+                    }
                 }
             }
         }
