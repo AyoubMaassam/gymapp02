@@ -2,8 +2,11 @@ package com.gymapp
 
 import android.app.Application
 import android.util.Log
+import android.os.Build
 import coil.Coil
 import coil.ImageLoader
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import com.gymapp.data.db.AppDatabase
@@ -19,11 +22,18 @@ class GymApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         setupCoil()
-        syncExerciseImages()
+        // syncExerciseImages() // Removed bulk sync of hardcoded URLs
     }
 
     private fun setupCoil() {
         val imageLoader = ImageLoader.Builder(this)
+            .components {
+                if (Build.VERSION.SDK_INT >= 28) {
+                    add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
+            }
             .memoryCache {
                 MemoryCache.Builder(this)
                     .maxSizePercent(0.25)

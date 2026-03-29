@@ -3,6 +3,7 @@ package com.gymapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
@@ -24,9 +25,11 @@ class MainActivity : ComponentActivity() {
                         BottomNavBar(navController = navController)
                     }
                 ) { paddingValues ->
-                    NavGraph(
-                        navController = navController
-                    )
+                    Box(modifier = Modifier.padding(paddingValues)) {
+                        NavGraph(
+                            navController = navController
+                        )
+                    }
                 }
             }
         }

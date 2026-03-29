@@ -15,6 +15,7 @@ import com.gymapp.ui.screens.home.HomeScreen
 import com.gymapp.ui.screens.musclemap.MuscleMapScreen
 import com.gymapp.ui.screens.profile.ProfileScreen
 import com.gymapp.ui.screens.progress.ProgressScreen
+import com.gymapp.ui.screens.programs.ProgramDetailScreen
 import com.gymapp.ui.screens.programs.ProgramsScreen
 import com.gymapp.ui.screens.workout.ActiveWorkoutScreen
 
@@ -90,7 +91,21 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             ProgressScreen()
         }
         composable("programs") {
-            ProgramsScreen()
+            ProgramsScreen(
+                onProgramClick = { programId ->
+                    navController.navigate("program_detail/$programId")
+                }
+            )
+        }
+        composable(
+            route = "program_detail/{programId}",
+            arguments = listOf(navArgument("programId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val programId = backStackEntry.arguments?.getInt("programId") ?: 0
+            ProgramDetailScreen(
+                programId = programId,
+                onBackClick = { navController.popBackStack() }
+            )
         }
         composable("profile") {
             ProfileScreen()

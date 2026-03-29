@@ -62,18 +62,6 @@ object ExerciseImageSync {
     )
 
     suspend fun syncGifUrls(db: AppDatabase) {
-        withContext(Dispatchers.IO) {
-            try {
-                var updatedCount = 0
-                exerciseImages.forEach { (exerciseId, imageUrl) ->
-                    db.exerciseDao().updateGifUrl(exerciseId, imageUrl)
-                    updatedCount++
-                    Log.d("GymApp", "✓ id=$exerciseId url=$imageUrl")
-                }
-                Log.d("GymApp", "تم تحديث $updatedCount تمرين بصور حقيقية")
-            } catch (e: Exception) {
-                Log.e("GymApp", "خطأ: ${e.message}")
-            }
-        }
+        // This function is now deprecated in favor of dynamic fetching in ExerciseRepository
     }
 }

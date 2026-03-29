@@ -8,10 +8,14 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.gymapp.data.db.dao.EquipmentDao
 import com.gymapp.data.db.dao.ExerciseDao
+import com.gymapp.data.db.dao.ProgramDao
 import com.gymapp.data.db.dao.WorkoutDao
 import com.gymapp.data.db.entities.Equipment
 import com.gymapp.data.db.entities.Exercise
 import com.gymapp.data.db.entities.ExerciseLog
+import com.gymapp.data.db.entities.ProgramExercise
+import com.gymapp.data.db.entities.WorkoutDay
+import com.gymapp.data.db.entities.WorkoutProgram
 import com.gymapp.data.db.entities.WorkoutSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,9 +26,12 @@ import kotlinx.coroutines.launch
         Exercise::class,
         Equipment::class,
         WorkoutSession::class,
-        ExerciseLog::class
+        ExerciseLog::class,
+        WorkoutProgram::class,
+        WorkoutDay::class,
+        ProgramExercise::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
     abstract fun equipmentDao(): EquipmentDao
     abstract fun workoutDao(): WorkoutDao
+    abstract fun programDao(): ProgramDao
 
     companion object {
         @Volatile
@@ -44,6 +52,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `workout_programs` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `goal` TEXT NOT NULL, `durationWeeks` INTEGER NOT NULL, `intensity` TEXT NOT NULL, `imageUrl` TEXT NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `workout_days` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `programId` INTEGER NOT NULL, `dayName` TEXT NOT NULL, `dayOrder` INTEGER NOT NULL, FOREIGN KEY(`programId`) REFERENCES `workout_programs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `program_exercises` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `dayId` INTEGER NOT NULL, `exerciseId` INTEGER NOT NULL, `sets` INTEGER NOT NULL, `reps` TEXT NOT NULL, `restSeconds` INTEGER NOT NULL, `order` INTEGER NOT NULL, FOREIGN KEY(`dayId`) REFERENCES `workout_days`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE program_exercises ADD COLUMN weight REAL NOT NULL DEFAULT 0.0")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -51,7 +73,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "gym_database"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
